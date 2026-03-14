@@ -375,3 +375,50 @@ If you have any questions, please feel free to contact misslei@mail.ustc.edu.cn.
   year={2024}
 }
 ``` -->
+
+## Offline Single-GPU Deployment & RGv2 Baseline Reproduction (No `petrel_client`)
+
+For Linux GPU clusters without external internet, this repository now includes local/offline scripts under `scripts/`.
+
+### What these scripts do
+
+- Use local filesystem paths only (no `--bucket`, no `petrel_client` dependency in runtime path).
+- Build `test_file.json` for `test_llm.py` from your local RadGenome metadata.
+- Run original `AutoRG_Brain/test_llm.py` with RGv2 checkpoints.
+- Save outputs to your configured result folder:
+  - `pred_report.json`
+  - `table2_metrics.json`
+  - `features_cache/`
+
+### 1) Prepare environment file
+
+```bash
+cp scripts/autorg_local.env.example scripts/autorg_local.env
+# Edit all values in scripts/autorg_local.env
+```
+
+### 2) (Optional) create conda environment
+
+```bash
+bash scripts/setup_env_autorg_local.sh autorg-brain 3.10
+conda activate autorg-brain
+```
+
+### 3) Run end-to-end baseline (RGv2)
+
+```bash
+bash scripts/run_autorg_rgv2_baseline.sh scripts/autorg_local.env
+```
+
+### Notes on Table-2 metrics (RadGraph / RaTEScore / RadCliQ)
+
+The script `scripts/eval_table2_metrics.py` computes local BLEU-1 and ROUGE-1 directly.
+For RadGraph / RaTEScore / RadCliQ, pass offline evaluator commands through env variables:
+
+```bash
+RADGRAPH_CMD='python /path/to/radgraph_eval.py --pred "$PRED_JSON" --test "$TEST_JSON"'
+RATESCORE_CMD='python /path/to/ratescore_eval.py --pred "$PRED_JSON" --test "$TEST_JSON"'
+RADCLIQ_CMD='python /path/to/radcliq_eval.py --pred "$PRED_JSON" --test "$TEST_JSON"'
+```
+
+Those commands are executed by `scripts/eval_table2_metrics.py` and their raw outputs are stored in `table2_metrics.json`.
